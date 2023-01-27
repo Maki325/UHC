@@ -1,0 +1,13 @@
+name: Uhc
+version: '${project.version}'
+main: me.maki325.mc.plugins.uhc.Uhc
+api-version: 1.16
+prefix: UHC
+load: STARTUP
+authors: [ Maki325 ]
+description: An UHC plugin
+website: maki325.me
+commands:
+  uhc:
+    description: UHC commands
+    usage: /uhc [teams | world | help]

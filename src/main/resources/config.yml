@@ -1,0 +1,21 @@
+border:
+  ==: UhcBorder
+  startSize: 1200
+  damage:
+    ==: UhcDamage
+    amount: 0.2
+    enabled: true
+  shrink:
+    enabled: true
+    type: interval
+    wait: 10m
+    blocks: 50
+    shrinkTime: 2m
+    interval: 20m
+    endSize: 100
+pvp:
+  ==: UhcPvP
+  timeout: 0t
+  friendlyFire: true
+worlds:
+teams:
