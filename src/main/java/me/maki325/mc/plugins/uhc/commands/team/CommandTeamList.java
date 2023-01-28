@@ -10,7 +10,6 @@ import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class CommandTeamList implements CommandUsage {
 
@@ -26,7 +25,7 @@ public class CommandTeamList implements CommandUsage {
         @NotNull String label,
         @NotNull String[] args
     ) {
-        List<Team> teams = (List<Team>) plugin.getConfig().getList("teams", new ArrayList<Team>());
+        ArrayList<Team> teams = plugin.getUhcConfig().teams;
         if(teams.isEmpty()) {
             sender.sendMessage(Component.text("No teams!"));
             return true;

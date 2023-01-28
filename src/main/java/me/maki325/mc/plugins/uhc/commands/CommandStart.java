@@ -32,61 +32,6 @@ public class CommandStart implements CommandUsage {
         this.plugin = plugin;
     }
 
-    private void startSecondsTimer(World world, final int seconds) {
-        if(seconds == 0) {
-            world.sendMessage(Component.join(Component.empty(),
-                Component.text("PvP is "),
-                Component.text("enabled").color(RED).decorate(TextDecoration.BOLD),
-                Component.text("!")
-            ));
-            return;
-        }
-
-        sendPvPStartsInSecondsMessage(world, seconds);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> startSecondsTimer(world, seconds - 1), TimeUnit.SECOND.tickMultiplier);
-    }
-
-    private void sendPvPStartsInSecondsMessage(World world, int seconds) {
-        final int redStart = 3;
-
-        TextColor color = seconds == 10 ? GREEN : seconds > redStart ? YELLOW : RED;
-        world.sendMessage(Component.join(Component.empty(),
-            Component.text("PvP starts in "),
-            new UhcTime(seconds * TimeUnit.SECOND.tickMultiplier)
-                .toComponent()
-                .color(color)
-                .decoration(TextDecoration.BOLD, seconds <= redStart),
-            Component.text("!")
-        ));
-    }
-
-    private void start10sCounter(World world, int ticksLeft) {
-        int delay = ticksLeft - 10 * TimeUnit.SECOND.tickMultiplier;
-        if(delay >= 0) {
-            Bukkit.getScheduler().runTaskLater(
-                plugin,
-                () -> sendPvPStartsInSecondsMessage(world, 10),
-                delay
-            );
-            Bukkit.getScheduler().runTaskLater(plugin, () -> startSecondsTimer(world, 5), delay + 5 * TimeUnit.SECOND.tickMultiplier);
-
-            return;
-        }
-        delay = ticksLeft - 5 * TimeUnit.SECOND.tickMultiplier;
-        if(delay >= 0) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> startSecondsTimer(world, 5), delay);
-            return;
-        }
-
-        int secondsLeft = ticksLeft / TimeUnit.SECOND.tickMultiplier;
-        if(secondsLeft <= 0) {
-            startSecondsTimer(world, 0);
-            return;
-        }
-        delay = ticksLeft - secondsLeft * TimeUnit.SECOND.tickMultiplier;
-        Bukkit.getScheduler().runTaskLater(plugin, () -> startSecondsTimer(world, secondsLeft), delay);
-    }
-
     @Override public boolean onCommand(
         @NotNull CommandSender sender,
         @NotNull Command command,
@@ -98,17 +43,7 @@ public class CommandStart implements CommandUsage {
             return true;
         }
         // /uhc start <world name>
-        String worldName = args[0];
-
-        ArrayList<UhcWorld> worlds = (ArrayList<UhcWorld>) plugin.getConfig().getList("worlds", new ArrayList<>());
-
-        UhcWorld uhcWorld = null;
-        for(UhcWorld world : worlds) {
-            if(worldName.equals(world.name)) {
-                uhcWorld = world;
-                break;
-            }
-        }
+        UhcWorld uhcWorld = getWorld(args[0]);
         if(uhcWorld == null) {
             sender.sendMessage(Component.text("No world with that name!"));
             return true;
@@ -116,9 +51,10 @@ public class CommandStart implements CommandUsage {
 
         World world = uhcWorld.getBukkitWorld(plugin);
 
+        world.setGameRule(GameRule.NATURAL_REGENERATION, false);
         world.getWorldBorder().setCenter(0, 0);
 
-        Border border = plugin.getConfig().getObject("border", Border.class);
+        Border border = plugin.getUhcConfig().border;
         if(border == null) {
             sender.sendMessage(Component.text("No border info!"));
             return true;
@@ -128,7 +64,7 @@ public class CommandStart implements CommandUsage {
         world.getWorldBorder().setSize(size);
         border.setupWorldBorder(plugin, world.getWorldBorder());
 
-        ArrayList<Team> teams = (ArrayList<Team>) plugin.getConfig().getList("teams", new ArrayList<>());
+        ArrayList<Team> teams = plugin.getUhcConfig().teams;
         for(Team team : teams) {
             int x = random.nextInt(size) - size / 2;
             int z = random.nextInt(size) - size / 2;
@@ -160,36 +96,8 @@ public class CommandStart implements CommandUsage {
             });
         }
 
-        UhcPvP pvp = plugin.getConfig().getObject("pvp", UhcPvP.class, new UhcPvP(new UhcTime(0), true));
-        if(pvp.timeout.timeInTicks > 0) {
-            world.sendMessage(Component.join(Component.empty(),
-                Component.text("PvP is "),
-                Component
-                    .text("disabled")
-                    .decorate(TextDecoration.BOLD),
-                Component.text("! It will be enabled in "),
-                pvp.timeout.toComponent().color(TextColor.color(84, 252, 84)),
-                Component.text(".")
-            ));
-            world.setPVP(false);
-
-            start10sCounter(world, pvp.timeout.timeInTicks);
-        } else {
-            world.sendMessage(Component.join(Component.empty(),
-                Component.text("PvP is "),
-                Component
-                    .text("enabled")
-                    .color(TextColor.color(255, 0, 0))
-                    .decorate(TextDecoration.BOLD),
-                Component.text("!")
-            ));
-        }
-
-        world.sendMessage(Component.join(Component.empty(),
-            Component.text("Friendly fire is "),
-            pvp.friendlyFire ? Component.text("enabled").color(RED) : Component.text("disabled").color(GREEN),
-            Component.text("!")
-        ));
+        UhcPvP pvp = plugin.getUhcConfig().pvp;
+        setPvP(pvp, world);
 
         Map<UUID, Scoreboard> scoreboardMap = new HashMap<>();
         Component name = Component
@@ -287,13 +195,112 @@ public class CommandStart implements CommandUsage {
         return true;
     }
 
-    @Override
-    public void sendUsage(@NotNull CommandSender sender) {
+    private void setPvP(UhcPvP pvp, World world) {
+        if(pvp.timeout.timeInTicks > 0) {
+            world.sendMessage(Component.join(Component.empty(),
+                Component.text("PvP is "),
+                Component
+                    .text("disabled")
+                    .decorate(TextDecoration.BOLD),
+                Component.text("! It will be enabled in "),
+                pvp.timeout.toComponent().color(TextColor.color(84, 252, 84)),
+                Component.text(".")
+            ));
+            world.setPVP(false);
+
+            start10sCounter(world, pvp.timeout.timeInTicks);
+        }
+        else {
+            world.sendMessage(Component.join(Component.empty(),
+                Component.text("PvP is "),
+                Component
+                    .text("enabled")
+                    .color(TextColor.color(255, 0, 0))
+                    .decorate(TextDecoration.BOLD),
+                Component.text("!")
+            ));
+        }
+
+        world.sendMessage(Component.join(Component.empty(),
+            Component.text("Friendly fire is "),
+            pvp.friendlyFire ? Component.text("enabled").color(RED) : Component.text("disabled").color(GREEN),
+            Component.text("!")
+        ));
+    }
+
+    @Override public void sendUsage(@NotNull CommandSender sender) {
 
     }
 
-    @Override
-    public String getUsage() {
+    @Override public String getUsage() {
         return null;
     }
+
+    private UhcWorld getWorld(String worldName) {
+        ArrayList<UhcWorld> worlds = plugin.getUhcConfig().worlds;
+
+        for(UhcWorld world : worlds) {
+            if(worldName.equals(world.name)) {
+                return world;
+            }
+        }
+
+        return null;
+    }
+
+    private void startSecondsTimer(World world, final int seconds) {
+        if(seconds == 0) {
+            world.sendMessage(Component.join(Component.empty(),
+                Component.text("PvP is "),
+                Component.text("enabled").color(RED).decorate(TextDecoration.BOLD),
+                Component.text("!")
+            ));
+            return;
+        }
+
+        sendPvPStartsInSecondsMessage(world, seconds);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> startSecondsTimer(world, seconds - 1), TimeUnit.SECOND.tickMultiplier);
+    }
+
+    private void sendPvPStartsInSecondsMessage(World world, int seconds) {
+        final int redStart = 3;
+
+        TextColor color = seconds == 10 ? GREEN : seconds > redStart ? YELLOW : RED;
+        world.sendMessage(Component.join(Component.empty(),
+            Component.text("PvP starts in "),
+            new UhcTime(seconds * TimeUnit.SECOND.tickMultiplier)
+                .toComponent()
+                .color(color)
+                .decoration(TextDecoration.BOLD, seconds <= redStart),
+            Component.text("!")
+        ));
+    }
+
+    private void start10sCounter(World world, int ticksLeft) {
+        int delay = ticksLeft - 10 * TimeUnit.SECOND.tickMultiplier;
+        if(delay >= 0) {
+            Bukkit.getScheduler().runTaskLater(
+                plugin,
+                () -> sendPvPStartsInSecondsMessage(world, 10),
+                delay
+            );
+            Bukkit.getScheduler().runTaskLater(plugin, () -> startSecondsTimer(world, 5), delay + 5L * TimeUnit.SECOND.tickMultiplier);
+
+            return;
+        }
+        delay = ticksLeft - 5 * TimeUnit.SECOND.tickMultiplier;
+        if(delay >= 0) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> startSecondsTimer(world, 5), delay);
+            return;
+        }
+
+        int secondsLeft = ticksLeft / TimeUnit.SECOND.tickMultiplier;
+        if(secondsLeft <= 0) {
+            startSecondsTimer(world, 0);
+            return;
+        }
+        delay = ticksLeft - secondsLeft * TimeUnit.SECOND.tickMultiplier;
+        Bukkit.getScheduler().runTaskLater(plugin, () -> startSecondsTimer(world, secondsLeft), delay);
+    }
+
 }

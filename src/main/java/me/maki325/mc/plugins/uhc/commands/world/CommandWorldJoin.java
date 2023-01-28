@@ -43,7 +43,7 @@ public class CommandWorldJoin implements CommandUsage {
             return true;
         }
 
-        ArrayList<UhcWorld> worlds = (ArrayList<UhcWorld>) plugin.getConfig().getList("worlds", new ArrayList<>());
+        ArrayList<UhcWorld> worlds = plugin.getUhcConfig().worlds;
 
         for(UhcWorld world : worlds) {
             if(name.equals(world.name)) {

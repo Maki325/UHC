@@ -24,7 +24,7 @@ public class CommandWorldList implements CommandUsage {
         @NotNull String label,
         @NotNull String[] args
     ) {
-        ArrayList<UhcWorld> worlds = (ArrayList<UhcWorld>) plugin.getConfig().getList("worlds", new ArrayList<>());
+        ArrayList<UhcWorld> worlds = plugin.getUhcConfig().worlds;
 
         if(worlds.isEmpty()) {
             sender.sendMessage(Component.text("No worlds!"));

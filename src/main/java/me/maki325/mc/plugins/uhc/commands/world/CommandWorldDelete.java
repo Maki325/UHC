@@ -31,7 +31,7 @@ public class CommandWorldDelete implements CommandUsage {
         }
         String name = args[0];
 
-        ArrayList<UhcWorld> worlds = (ArrayList<UhcWorld>) plugin.getConfig().getList("worlds", new ArrayList<>());
+        ArrayList<UhcWorld> worlds = plugin.getUhcConfig().worlds;
 
         for(UhcWorld world : worlds) {
             if(name.equals(world.name)) {
@@ -42,8 +42,9 @@ public class CommandWorldDelete implements CommandUsage {
                 sender.sendMessage(Component.text("Deleted world \"" + name + "\"!"));
 
                 worlds.remove(world);
-                plugin.getConfig().set("worlds", worlds);
-                plugin.saveConfig();
+
+                plugin.getUhcConfig().worlds = worlds;
+                plugin.saveUhcConfig();
 
                 return true;
             }

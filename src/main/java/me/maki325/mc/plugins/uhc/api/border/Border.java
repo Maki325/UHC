@@ -15,6 +15,7 @@ import java.util.Map;
 
 @SerializableAs("UhcBorder")
 public class Border implements ConfigurationSerializable {
+    public static final Border DEFAULT = new Border(1200, new Damage(true, 0.2f), new NoneBorderShrink());
 
     public int startSize;
     public Damage damage;
@@ -29,7 +30,7 @@ public class Border implements ConfigurationSerializable {
 
     public Border(Map<String, Object> map) {
         this.startSize = (int) map.get("startSize");
-        this.damage = (Damage) map.get("damage");
+        this.damage = new Damage((Map<String, Object>) map.get("damage"));
         this.shrink = parseBorderShrink((Map<String, Object>) map.get("shrink"));
     }
 
@@ -46,7 +47,7 @@ public class Border implements ConfigurationSerializable {
     public @NotNull Map<String, Object> serialize() {
         Map<String, Object> map = new HashMap<>();
         map.put("startSize", this.startSize);
-        map.put("damage", this.damage);
+        map.put("damage", this.damage.serialize());
         map.put("shrink", this.shrink.serialize());
         return map;
     }

@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class CommandTeamJoin implements CommandUsage {
 
@@ -37,7 +36,7 @@ public class CommandTeamJoin implements CommandUsage {
         Player player = (Player) sender;
         String name = args[0];
 
-        List<Team> teams = (List<Team>) plugin.getConfig().getList("teams", new ArrayList<>());
+        ArrayList<Team> teams = plugin.getUhcConfig().teams;
 
         if(teams.stream().anyMatch(team -> team.players.contains(player.getUniqueId()))) {
             sender.sendMessage(Component.text("You are already in a team, please leave the current team to join another one."));
@@ -48,8 +47,8 @@ public class CommandTeamJoin implements CommandUsage {
             if(name.equals(team.name)) {
                 team.players.add(player.getUniqueId());
 
-                this.plugin.getConfig().set("teams", teams);
-                this.plugin.saveConfig();
+                this.plugin.getUhcConfig().teams = teams;
+                this.plugin.saveUhcConfig();
 
                 sender.sendMessage(Component.text("Joined the team \"" + name + "\"!"));
                 return true;

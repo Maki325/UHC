@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -34,7 +33,7 @@ public class CommandTeamCreate implements CommandUsage {
         }
         String name = args[0];
 
-        List<Team> teams = (List<Team>) plugin.getConfig().getList("teams", new ArrayList<>());
+        ArrayList<Team> teams = plugin.getUhcConfig().teams;
 
         if(teams.stream().anyMatch(team -> Objects.equals(team.name, name))) {
             sender.sendMessage(Component.text("Team with the name \"" + name + "\" already exists!"));
@@ -58,8 +57,8 @@ public class CommandTeamCreate implements CommandUsage {
 
         teams.add(team);
 
-        this.plugin.getConfig().set("teams", teams);
-        this.plugin.saveConfig();
+        this.plugin.getUhcConfig().teams = teams;
+        this.plugin.saveUhcConfig();
 
         sender.sendMessage(Component.text("Created team \"" + name + "\"!"));
 

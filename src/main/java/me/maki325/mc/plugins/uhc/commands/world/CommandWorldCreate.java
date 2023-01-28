@@ -35,7 +35,7 @@ public class CommandWorldCreate implements CommandUsage {
         }
         String name = args[0];
 
-        ArrayList<UhcWorld> worlds = (ArrayList<UhcWorld>) plugin.getConfig().getList("worlds", new ArrayList<>());
+        ArrayList<UhcWorld> worlds = plugin.getUhcConfig().worlds;
 
         if(worlds.stream().anyMatch(world -> name.equals(world.name))) {
             sender.sendMessage(Component.text("World with that name \"" + name + "\" already exists!"));
@@ -52,8 +52,8 @@ public class CommandWorldCreate implements CommandUsage {
 
         sender.sendMessage(Component.text("Created world \"" + name + "\" (\"" + worldId + "\")!"));
 
-        plugin.getConfig().set("worlds", worlds);
-        plugin.saveConfig();
+        plugin.getUhcConfig().worlds = worlds;
+        plugin.saveUhcConfig();
 
         return true;
     }

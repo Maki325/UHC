@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class CommandTeamLeave implements CommandUsage {
 
@@ -32,13 +31,13 @@ public class CommandTeamLeave implements CommandUsage {
         }
         Player player = (Player) sender;
 
-        List<Team> teams = (List<Team>) plugin.getConfig().getList("teams", new ArrayList<>());
+        ArrayList<Team> teams = plugin.getUhcConfig().teams;
 
         for(Team team : teams) {
             if(team.players.contains(player.getUniqueId())) {
                 team.players.remove(player.getUniqueId());
 
-                if(team.owner == player.getUniqueId()) {
+                if(player.getUniqueId().equals(team.owner)) {
                     if(team.players.isEmpty()) {
                         teams.remove(team);
                     } else {
@@ -46,8 +45,8 @@ public class CommandTeamLeave implements CommandUsage {
                     }
                 }
 
-                this.plugin.getConfig().set("teams", teams);
-                this.plugin.saveConfig();
+                this.plugin.getUhcConfig().teams = teams;
+                this.plugin.saveUhcConfig();
 
                 sender.sendMessage(Component.text("Left the team \"" + team.name + "\"!"));
                 return true;

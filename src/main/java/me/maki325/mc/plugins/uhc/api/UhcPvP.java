@@ -9,6 +9,7 @@ import java.util.Map;
 
 @SerializableAs("UhcPvP")
 public class UhcPvP implements ConfigurationSerializable {
+    public static final UhcPvP DEFAULT = new UhcPvP(new UhcTime("0t"), false);
 
     public UhcTime timeout;
     public boolean friendlyFire;
